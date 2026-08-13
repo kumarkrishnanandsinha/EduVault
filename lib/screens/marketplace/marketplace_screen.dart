@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../services/dummy_data.dart';
-import 'widgets/category_chip.dart';
-import 'widgets/resource_card.dart';
-import 'widgets/search_bar.dart';
+import '../../models/resource_model.dart';
+import '../../services/upload_service.dart';
+import '../../widgets/resource_card.dart';
 
 class MarketplaceScreen extends StatelessWidget {
   const MarketplaceScreen({super.key});
@@ -11,73 +10,34 @@ class MarketplaceScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xffF5F7FB),
-
-      appBar: AppBar(
-        title: const Text("Marketplace"),
-      ),
-
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-
-          children: [
-
-            const MarketplaceSearchBar(),
-
-            const SizedBox(height: 25),
-
-            const Text(
-              "Categories",
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
+      appBar: AppBar(title: const Text('Marketplace')),
+      body: StreamBuilder<List<ResourceModel>>(
+        stream: UploadService().watchMarketplace(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                  'Could not load the marketplace.\n${snapshot.error}',
+                  textAlign: TextAlign.center,
+                ),
               ),
-            ),
-
-            const SizedBox(height: 15),
-
-            const SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  CategoryChip(title: "All", isSelected: true),
-                  CategoryChip(title: "Notes"),
-                  CategoryChip(title: "PYQs"),
-                  CategoryChip(title: "Books"),
-                  CategoryChip(title: "Assignments"),
-                  CategoryChip(title: "Quiz"),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 25),
-
-            const Text(
-              "Trending Resources",
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
-            const SizedBox(height: 15),
-
-            Expanded(
-              child: ListView.builder(
-                itemCount: DummyData.resources.length,
-                itemBuilder: (context, index) {
-                  return ResourceCard(
-                    resource: DummyData.resources[index],
-                  );
-                },
-              ),
-            ),
-
-          ],
-        ),
+            );
+          }
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          final resources = snapshot.data ?? const <ResourceModel>[];
+          if (resources.isEmpty) {
+            return const Center(child: Text('No resources are available yet.'));
+          }
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: resources.length,
+            itemBuilder: (_, index) => ResourceCard(resource: resources[index]),
+          );
+        },
       ),
     );
   }
