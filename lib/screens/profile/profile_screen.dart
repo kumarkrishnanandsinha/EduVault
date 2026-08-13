@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import '../../services/auth_service.dart';
+import '../seller/seller_dashboard_screen.dart';
 import 'edit_profile_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -36,6 +37,8 @@ class ProfileScreen extends StatelessWidget {
 
         final data = snapshot.data!.data() as Map<String, dynamic>? ?? {};
 
+        final bool sellerMode = data["sellerMode"] ?? false;
+
         return Scaffold(
           appBar: AppBar(
             title: const Text("Profile"),
@@ -61,10 +64,7 @@ class ProfileScreen extends StatelessWidget {
 
                 const CircleAvatar(
                   radius: 45,
-                  child: Icon(
-                    Icons.person,
-                    size: 50,
-                  ),
+                  child: Icon(Icons.person, size: 50),
                 ),
 
                 const SizedBox(height: 20),
@@ -79,14 +79,9 @@ class ProfileScreen extends StatelessWidget {
 
                 const SizedBox(height: 8),
 
-                Text(
-                  data["email"] ?? "",
-                  style: const TextStyle(
-                    fontSize: 16,
-                  ),
-                ),
+                Text(data["email"] ?? ""),
 
-                const SizedBox(height: 25),
+                const SizedBox(height: 20),
 
                 Card(
                   child: Column(
@@ -115,6 +110,35 @@ class ProfileScreen extends StatelessWidget {
                         subtitle: Text(data["phone"] ?? ""),
                       ),
                     ],
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                Card(
+                  child: SwitchListTile(
+                    value: sellerMode,
+                    title: const Text("Seller Mode"),
+                    subtitle: const Text("Enable Seller Dashboard"),
+                    secondary: const Icon(Icons.store),
+                    onChanged: (value) async {
+                      await FirebaseFirestore.instance
+                          .collection("users")
+                          .doc(user.uid)
+                          .update({
+                        "sellerMode": value,
+                      });
+
+                      if (value && context.mounted) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                            const SellerDashboardScreen(),
+                          ),
+                        );
+                      }
+                    },
                   ),
                 ),
 
