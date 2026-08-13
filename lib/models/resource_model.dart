@@ -1,23 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ResourceModel {
-  final String id;
-  final String title;
-  final String description;
-  final String subject;
-  final String category;
-  final String sellerId;
-  final String sellerName;
-  final String pdfUrl;
-  final String thumbnailUrl;
-  final bool isFree;
-  final double price;
-  final int downloads;
-  final double rating;
-  final int totalRatings;
-  final bool approved;
-  final DateTime createdAt;
-
   const ResourceModel({
     required this.id,
     required this.title,
@@ -36,6 +19,56 @@ class ResourceModel {
     required this.approved,
     required this.createdAt,
   });
+
+  final String id;
+  final String title;
+  final String description;
+  final String subject;
+  final String category;
+  final String sellerId;
+  final String sellerName;
+  final String pdfUrl;
+  final String thumbnailUrl;
+
+  final bool isFree;
+  final bool approved;
+
+  final double price;
+  final double rating;
+
+  final int downloads;
+  final int totalRatings;
+
+  final DateTime createdAt;
+
+  factory ResourceModel.fromDocument(
+      DocumentSnapshot<Map<String, dynamic>> doc,
+      ) {
+    final m = doc.data() ?? <String, dynamic>{};
+
+    final created = m['createdAt'];
+
+    return ResourceModel(
+      id: m['id'] as String? ?? doc.id,
+      title: m['title'] as String? ?? '',
+      description: m['description'] as String? ?? '',
+      subject: m['subject'] as String? ?? '',
+      category: m['category'] as String? ?? '',
+      sellerId: m['sellerId'] as String? ?? '',
+      sellerName: m['sellerName'] as String? ?? 'Unknown seller',
+      pdfUrl: m['pdfUrl'] as String? ?? '',
+      thumbnailUrl: m['thumbnailUrl'] as String? ?? '',
+      isFree: m['isFree'] as bool? ?? true,
+      price: (m['price'] as num? ?? 0).toDouble(),
+      downloads: (m['downloads'] as num? ?? 0).toInt(),
+      rating: (m['rating'] as num? ?? 0).toDouble(),
+      totalRatings: (m['totalRatings'] as num? ?? 0).toInt(),
+      approved: m['approved'] as bool? ?? false,
+      createdAt: created is Timestamp
+          ? created.toDate()
+          : DateTime.fromMillisecondsSinceEpoch(0),
+    );
+  }
 
   Map<String, dynamic> toMap() {
     return {
@@ -56,43 +89,5 @@ class ResourceModel {
       'approved': approved,
       'createdAt': Timestamp.fromDate(createdAt),
     };
-  }
-
-  factory ResourceModel.fromMap(Map<String, dynamic> map) {
-    final rawCreatedAt = map['createdAt'];
-    DateTime createdAt;
-    if (rawCreatedAt is Timestamp) {
-      createdAt = rawCreatedAt.toDate();
-    } else if (rawCreatedAt is int) {
-      createdAt = DateTime.fromMillisecondsSinceEpoch(rawCreatedAt);
-    } else {
-      createdAt = DateTime.fromMillisecondsSinceEpoch(0);
-    }
-
-    return ResourceModel(
-      id: map['id'] as String? ?? '',
-      title: map['title'] as String? ?? '',
-      description: map['description'] as String? ?? '',
-      subject: map['subject'] as String? ?? '',
-      category: map['category'] as String? ?? '',
-      sellerId: map['sellerId'] as String? ?? '',
-      sellerName: map['sellerName'] as String? ?? 'Unknown seller',
-      pdfUrl: map['pdfUrl'] as String? ?? '',
-      thumbnailUrl: map['thumbnailUrl'] as String? ?? '',
-      isFree: map['isFree'] as bool? ?? true,
-      price: (map['price'] as num? ?? 0).toDouble(),
-      downloads: (map['downloads'] as num? ?? 0).toInt(),
-      rating: (map['rating'] as num? ?? 0).toDouble(),
-      totalRatings: (map['totalRatings'] as num? ?? 0).toInt(),
-      approved: map['approved'] as bool? ?? false,
-      createdAt: createdAt,
-    );
-  }
-
-  factory ResourceModel.fromDocument(
-      DocumentSnapshot<Map<String, dynamic>> document,
-      ) {
-    final data = document.data() ?? <String, dynamic>{};
-    return ResourceModel.fromMap({...data, 'id': data['id'] ?? document.id});
   }
 }

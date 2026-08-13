@@ -1,211 +1,92 @@
 import 'package:flutter/material.dart';
 
 import '../../models/resource_model.dart';
-import '../../services/purchase_service.dart';
+import '../../services/download_service.dart';
+import '../../widgets/buy_button.dart';
+import '../library/pdf_viewer_screen.dart';
 
 class ResourceDetailsScreen extends StatefulWidget {
+  const ResourceDetailsScreen({super.key, required this.resource});
   final ResourceModel resource;
-
-  const ResourceDetailsScreen({
-    super.key,
-    required this.resource,
-  });
-
   @override
-  State<ResourceDetailsScreen> createState() =>
-      _ResourceDetailsScreenState();
+  State<ResourceDetailsScreen> createState() => _ResourceDetailsScreenState();
 }
 
-class _ResourceDetailsScreenState
-    extends State<ResourceDetailsScreen> {
+class _ResourceDetailsScreenState extends State<ResourceDetailsScreen> {
+  bool _opening = false;
+  Future<void> _open() async {
+    setState(() => _opening = true);
+    try {
+      final file = await DownloadService().downloadPdf(
+        url: widget.resource.pdfUrl,
+        resourceId: widget.resource.id,
+      );
+      if (!mounted) return;
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) =>
+              PdfViewerScreen(file: file, title: widget.resource.title),
+        ),
+      );
+    } catch (error) {
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$error')));
+    } finally {
+      if (mounted) setState(() => _opening = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final purchased =
-    PurchaseService.isPurchased(widget.resource);
-
+    final r = widget.resource;
     return Scaffold(
-      backgroundColor: const Color(0xffF5F7FB),
-
-      appBar: AppBar(
-        title: const Text("Resource Details"),
-      ),
-
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: SizedBox(
-            height: 55,
-            child: ElevatedButton(
-              onPressed: () {
-
-                if (!purchased) {
-
-                  PurchaseService.purchase(widget.resource);
-
-                  setState(() {});
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        "Resource Purchased Successfully 🎉",
-                      ),
-                    ),
-                  );
-
-                } else {
-
-                  Navigator.pop(context);
-
-                }
-              },
-
-              child: Text(
-                purchased
-                    ? "Open in Library"
-                    : widget.resource.isFree
-                    ? "Download Free"
-                    : "Buy for ₹${widget.resource.price.toInt()}",
+      appBar: AppBar(title: const Text('Resource details')),
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          AspectRatio(
+            aspectRatio: 16 / 9,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Image.network(
+                r.thumbnailUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const ColoredBox(
+                  color: Color(0xffede7f6),
+                  child: Icon(Icons.menu_book, size: 64),
+                ),
               ),
             ),
           ),
-        ),
-      ),
-
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-
-          children: [
-
-            Container(
-              height: 220,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: Colors.indigo.shade50,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: const Icon(
-                Icons.picture_as_pdf,
-                size: 90,
-                color: Colors.red,
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            Text(
-              widget.resource.title,
-              style: const TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
-            const SizedBox(height: 10),
-
-            Row(
-              children: [
-
-                const Icon(
-                  Icons.star,
-                  color: Colors.amber,
-                ),
-
-                const SizedBox(width: 5),
-
-                Text(widget.resource.rating.toString()),
-
-                const Spacer(),
-
-                Text(
-                  widget.resource.isFree
-                      ? "FREE"
-                      : "₹${widget.resource.price.toInt()}",
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.indigo,
-                  ),
-                ),
-
-              ],
-            ),
-
-            const SizedBox(height: 20),
-
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const CircleAvatar(
-                child: Icon(Icons.person),
-              ),
-              title: Text(widget.resource.sellerName),
-              subtitle: const Text("Verified Seller"),
-            ),
-
-            const Divider(),
-
-            const SizedBox(height: 20),
-
-            const Text(
-              "Description",
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
-            const SizedBox(height: 10),
-
-            Text(
-              widget.resource.description,
-              style: const TextStyle(
-                fontSize: 16,
-                height: 1.5,
-              ),
-            ),
-
-            const SizedBox(height: 25),
-
-            const Text(
-              "Includes",
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
-            const SizedBox(height: 10),
-
-            const ListTile(
-              leading: Icon(
-                Icons.check_circle,
-                color: Colors.green,
-              ),
-              title: Text("High Quality PDF"),
-            ),
-
-            const ListTile(
-              leading: Icon(
-                Icons.check_circle,
-                color: Colors.green,
-              ),
-              title: Text("Instant Access"),
-            ),
-
-            const ListTile(
-              leading: Icon(
-                Icons.check_circle,
-                color: Colors.green,
-              ),
-              title: Text("Lifetime Access"),
-            ),
-
-            const SizedBox(height: 80),
-          ],
-        ),
+          const SizedBox(height: 20),
+          Text(
+            r.title,
+            style: Theme.of(
+              context,
+            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          Text('${r.subject} • ${r.category}'),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 16,
+            children: [
+              Text('⭐ ${r.rating.toStringAsFixed(1)} (${r.totalRatings})'),
+              Text('⬇ ${r.downloads}'),
+              Text('By ${r.sellerName}'),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Text(r.description, style: Theme.of(context).textTheme.bodyLarge),
+          const SizedBox(height: 28),
+          if (_opening)
+            const Center(child: CircularProgressIndicator())
+          else
+            BuyButton(resource: r, onAccessGranted: _open),
+        ],
       ),
     );
   }
