@@ -1,21 +1,30 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+
+import '../../services/upload_service.dart';
 
 class UploadResourceScreen extends StatefulWidget {
   const UploadResourceScreen({super.key});
 
   @override
-  State<UploadResourceScreen> createState() =>
-      _UploadResourceScreenState();
+  State<UploadResourceScreen> createState() => _UploadResourceScreenState();
 }
 
-class _UploadResourceScreenState
-    extends State<UploadResourceScreen> {
+class _UploadResourceScreenState extends State<UploadResourceScreen> {
+  final UploadService uploadService = UploadService();
+
   final titleController = TextEditingController();
   final descriptionController = TextEditingController();
   final subjectController = TextEditingController();
 
-  String category = "Notes";
+  File? pdfFile;
+  File? imageFile;
+
+  bool loading = false;
   bool isFree = true;
+
+  String category = "Notes";
 
   @override
   void dispose() {
@@ -23,6 +32,26 @@ class _UploadResourceScreenState
     descriptionController.dispose();
     subjectController.dispose();
     super.dispose();
+  }
+
+  Future<void> pickPdf() async {
+    final file = await uploadService.pickPdf();
+
+    if (file == null) return;
+
+    setState(() {
+      pdfFile = file;
+    });
+  }
+
+  Future<void> pickImage() async {
+    final file = await uploadService.pickImage();
+
+    if (file == null) return;
+
+    setState(() {
+      imageFile = file;
+    });
   }
 
   @override
@@ -109,15 +138,49 @@ class _UploadResourceScreenState
               },
             ),
 
+            const SizedBox(height: 10),
+
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: pickPdf,
+                icon: const Icon(Icons.picture_as_pdf),
+                label: Text(
+                  pdfFile == null
+                      ? "Select PDF"
+                      : "PDF Selected ✅",
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: pickImage,
+                icon: const Icon(Icons.image),
+                label: Text(
+                  imageFile == null
+                      ? "Select Thumbnail"
+                      : "Image Selected ✅",
+                ),
+              ),
+            ),
+
             const SizedBox(height: 30),
 
             SizedBox(
               width: double.infinity,
               height: 55,
               child: ElevatedButton.icon(
-                onPressed: () {},
-                icon: const Icon(Icons.upload),
-                label: const Text("Upload"),
+                onPressed: loading ? null : () {},
+                icon: const Icon(Icons.cloud_upload),
+                label: Text(
+                  loading
+                      ? "Uploading..."
+                      : "Upload Resource",
+                ),
               ),
             ),
           ],

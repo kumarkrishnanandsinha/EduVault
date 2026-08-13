@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import 'my_uploads_screen.dart';
+import 'upload_resource_screen.dart';
+
 class SellerDashboardScreen extends StatelessWidget {
   const SellerDashboardScreen({super.key});
 
@@ -15,18 +18,20 @@ class SellerDashboardScreen extends StatelessWidget {
           children: [
             const SizedBox(height: 30),
 
-            const Icon(
-              Icons.store,
-              size: 90,
-              color: Colors.deepPurple,
+            const CircleAvatar(
+              radius: 45,
+              child: Icon(
+                Icons.store,
+                size: 50,
+              ),
             ),
 
             const SizedBox(height: 20),
 
             const Text(
-              "Seller Dashboard",
+              "Welcome Seller 🚀",
               style: TextStyle(
-                fontSize: 28,
+                fontSize: 26,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -34,7 +39,7 @@ class SellerDashboardScreen extends StatelessWidget {
             const SizedBox(height: 10),
 
             const Text(
-              "Welcome Seller 🚀",
+              "Manage your study resources here.",
               textAlign: TextAlign.center,
             ),
 
@@ -44,9 +49,16 @@ class SellerDashboardScreen extends StatelessWidget {
               width: double.infinity,
               height: 55,
               child: ElevatedButton.icon(
-                onPressed: () {},
                 icon: const Icon(Icons.upload_file),
                 label: const Text("Upload Resource"),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const UploadResourceScreen(),
+                    ),
+                  );
+                },
               ),
             ),
 
@@ -55,10 +67,17 @@ class SellerDashboardScreen extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               height: 55,
-              child: ElevatedButton.icon(
-                onPressed: () {},
+              child: OutlinedButton.icon(
                 icon: const Icon(Icons.folder),
                 label: const Text("My Uploads"),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const MyUploadsScreen(),
+                    ),
+                  );
+                },
               ),
             ),
           ],
